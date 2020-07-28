@@ -1,0 +1,33 @@
+{!REQUIRESCRIPT("/soap/ajax/19.0/connection.js")}
+{!REQUIRESCRIPT("/soap/ajax/24.0/apex.js")}
+
+var url = parent.location.href; //string for the URL of the current page
+var records = {!GETRECORDIDS($ObjectType.Contact)};
+var updateRecords = [];
+
+if (records[0] == null)
+alert("Please select atleast One Record!!!");
+else{
+var strIDs='';
+for(var i=0;i<records.length;i++){
+strIDs=strIDs+records[i]+'\',\'';
+}
+strIDs=strIDs.substr(0,strIDs.length-3);
+var query1 = sforce.connection.query('select id,name,Litmos__Sync_Litmos__c from contact where id in (\'' + strIDs + '\') and Litmos__Sync_Litmos__c = true');
+
+var records1 = query1.getArray("records");
+var updateList = [];
+for(var a=0;a<records1.length;a++){
+var cntObj = new sforce.SObject("contact");
+cntObj.Id=records1[a].Id;
+
+cntObj.Litmos__Sync_Litmos__c=false;
+updateList.push(cntObj);
+}
+var conf=confirm(records1.length+ " Contacts have been selected to be deprovisioned for Litmos Sync. Please confirm?");
+
+if(records1.length>0 && conf==true){
+result = sforce.connection.update(updateList); //push the updated records back to Salesforce
+parent.location.href = url; //refresh the page
+}
+}
